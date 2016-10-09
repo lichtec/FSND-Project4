@@ -15,16 +15,17 @@ class Game(ndb.Model):
     objective = ndb.StringProperty(required=True) #Word or Phrase
     hint = ndb.StringProperty(required=False) #Hint for the objective if offered
     difficulty = ndb.StringProperty(required=True) #Sets the amount of guesses allowed, relates to points too
-    attempts_remaining = ndb.IntegerProperty(required=True, default=5)
+    attempts_remaining = ndb.IntegerProperty(required=True)
     game_over = ndb.BooleanProperty(required=True, default=False)
     user = ndb.KeyProperty(required=True, kind='User')
-    challengee = ndb.KeyProperty(required=True, kind='User')
+    points = ndb.IntegerProperty(required=True)
+    challenged = ndb.KeyProperty(required=True, kind='User')
     
     @classmethod
-    def new_game(user, objective, hint='', difficulty, challengee):
+    def new_game(user, objective, hint='', difficulty, challenged):
         """Creates and returns a new game"""
         game = Game( user=user,
-                    chanllengee = challengee
+                    challenged = challenged
                     objective = objective,
                     hint = hint,
                     difficulty = difficulty,
@@ -38,7 +39,7 @@ class Game(ndb.Model):
         form = GameForm()
         form.urlsafe_key = self.key.urlsafe()
         form.user_name = self.user.get().name
-        form.challengee = self.challengee
+        form.challenged = self.challenged
         form.hint = self.hint
         form.difficulty = self.difficulty
         form.attempts_remaining = self.attempts_remaining
@@ -72,7 +73,7 @@ class GameForm(messages.Message):
     """GameForm for outbound game state information"""
     urlsafe_key = messages.StringField(1, required=True)
     user_name = messages.StringField(2, required=True)
-    challengee = messages.StringField(3, required=True)
+    challenged = messages.StringField(3, required=True)
     hint = messages.StringField(4, required=False)
     difficulty = messages.StringField(5, required=True)
     attempts_remaining = messages.IntegerField(6, required=True)
