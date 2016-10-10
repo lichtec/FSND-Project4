@@ -2,9 +2,9 @@
 entities used by the Hangman game. Because these classes are also regular Python
 classes they can include methods (such as 'to_form' and 'new_game')."""
 
-from protorpc import messages
+from protorpc import messages, message_types
 from google.appengine.ext import ndb
-from gameLogic import get_point_guesses, get_Cur_View
+from gameLogic import gameLogic
 
 class User(ndb.Model):
     """User profile"""
@@ -22,16 +22,16 @@ class Game(ndb.Model):
     game_over = ndb.BooleanProperty(required=True, default=False)
     user = ndb.KeyProperty(required=True, kind='User')
     challengee = ndb.KeyProperty(required=True, kind='User')
-    guesses = ndb.StringProperty(required=True, repeated=True)
+    guesses = ndb.StringProperty(required=False, repeated=True)
     
     @classmethod
-    def new_game(user, objective, hint='', difficulty, challengee):
+    def new_game(user, objective, difficulty, challengee, hint=''):
         """Creates and returns a new game"""
-        values = getDiff(difficulty)
+        values = gameLogic.get_point_guesses(difficulty)
         game = Game( user=user,
                     chanllengee = challengee,
                     objective = objective,
-                    cur_view = get_Cur_View(objective, '')[0],
+                    cur_view = gameLogic.get_Cur_View(objective, '')[0],
                     hint = hint,
                     difficulty = difficulty,
                     attempts_remaining = values[0],
@@ -89,7 +89,7 @@ class GameForm(messages.Message):
     difficulty = messages.StringField(6, required=True)
     attempts_remaining = messages.IntegerField(7, required=True)
     game_over = messages.BooleanField(8, required=True)
-    guesses = messages.StringField(9, required=True, repeated=True)
+    guesses = messages.StringField(9, required=False, repeated=True)
     message = messages.StringField(10, required=True)
 ##########################################################################
 
@@ -102,7 +102,7 @@ class ScoreForm(messages.Message):
     """ScoreForm for outbound Score information"""
     user_name = messages.StringField(1, required=True)
     won = messages.BooleanField(2, required=True)
-    date = messages.DateField(3, required=True)
+    date = message_types.DateTimeField(3, required=True)
     points = messages.IntegerField(4, required=True)
 
 

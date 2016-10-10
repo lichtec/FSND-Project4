@@ -12,14 +12,14 @@ from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 
 from models import User, Game, Score
-from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
+from models import StringMessage, GameForm, MakeMoveForm, ScoreForm,\
     ScoreForms
 
 from utils import get_by_urlsafe
 
-from gameLogic import get_Cur_View
+from gameLogic import gameLogic
 
-NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
+NEW_GAME_REQUEST = endpoints.ResourceContainer(GameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(
         urlsafe_game_key=messages.StringField(1),)
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
@@ -27,10 +27,16 @@ MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
     urlsafe_game_key=messages.StringField(1),)
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
                                            email=messages.StringField(2))
+from settings import WEB_CLIENT_ID
+
+API_EXPLORER_CLIENT_ID = endpoints.API_EXPLORER_CLIENT_ID
+EMAIL_SCOPE = endpoints.EMAIL_SCOPE
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
-@endpoints.api(name='hangman', version='v1')
+@endpoints.api(name='hangman', version='v1', audiences=[WEB_CLIENT_ID],
+    allowed_client_ids=[WEB_CLIENT_ID, API_EXPLORER_CLIENT_ID],
+    scopes=[EMAIL_SCOPE])
 class HangmanAPI(remote.Service):
     """Game API"""
     @endpoints.method(request_message=USER_REQUEST,
@@ -101,7 +107,7 @@ class HangmanAPI(remote.Service):
             return game.to_form('Guess already made')
 
 
-        game.cur_view, success = get_Cur_View(game.objective, game.cur_view, request.guess)
+        game.cur_view, success = gameLogic.get_Cur_View(game.objective, game.cur_view, request.guess)
         game.guesses.append(guess)
         if success:
             if game.cur_view == game.objective:

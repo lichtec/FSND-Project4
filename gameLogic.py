@@ -21,10 +21,10 @@ class gameLogic():
             return cur_view
         else:
             index = 0
-		for x in objective:
-            if x.lower() == guess.lower():
-                cur_view = cur_view[:index] + x + cur_view[index+1:]
-                success = True
-            index += 1
+            for x in objective:
+                if x.lower() == guess.lower():
+                    cur_view = cur_view[:index] + x + cur_view[index+1:]
+                    success = True
+                index += 1
 		return cur_view, success
 
