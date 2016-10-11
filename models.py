@@ -2,8 +2,9 @@
 entities used by the Hangman game. Because these classes are also regular Python
 classes they can include methods (such as 'to_form' and 'new_game')."""
 
-from protorpc import messages
+from protorpc import messages, message_types
 from google.appengine.ext import ndb
+from gameLogic import gameLogic
 
 class User(ndb.Model):
     """User profile"""
@@ -13,24 +14,31 @@ class User(ndb.Model):
 class Game(ndb.Model):
     """Game object"""
     objective = ndb.StringProperty(required=True) #Word or Phrase
+    cur_view = ndb.StringProperty(required=True)
     hint = ndb.StringProperty(required=False) #Hint for the objective if offered
     difficulty = ndb.StringProperty(required=True) #Sets the amount of guesses allowed, relates to points too
     attempts_remaining = ndb.IntegerProperty(required=True)
+    points = ndb.IntegerProperty(required=True)
     game_over = ndb.BooleanProperty(required=True, default=False)
     user = ndb.KeyProperty(required=True, kind='User')
-    points = ndb.IntegerProperty(required=True)
-    challenged = ndb.KeyProperty(required=True, kind='User')
+    challengee = ndb.KeyProperty(required=True, kind='User')
+    guesses = ndb.StringProperty(required=False, repeated=True)
     
     @classmethod
-    def new_game(user, objective, hint='', difficulty, challenged):
+    def new_game(user, objective, difficulty, challengee, hint=''):
         """Creates and returns a new game"""
+        values = gameLogic.get_point_guesses(difficulty)
         game = Game( user=user,
-                    challenged = challenged
+                    chanllengee = challengee,
                     objective = objective,
+                    cur_view = gameLogic.get_Cur_View(objective, '')[0],
                     hint = hint,
                     difficulty = difficulty,
-                    attempts_remaining = getDiff(difficulty)
-                    game_over=False)
+                    attempts_remaining = values[0],
+                    points = values[1],
+                    game_over=False,
+                    guesses=[]
+                   )
         game.put()
         return game
     
@@ -39,11 +47,13 @@ class Game(ndb.Model):
         form = GameForm()
         form.urlsafe_key = self.key.urlsafe()
         form.user_name = self.user.get().name
-        form.challenged = self.challenged
+        form.cur_view = self.cur_view
+        form.challengee = self.challengee
         form.hint = self.hint
         form.difficulty = self.difficulty
         form.attempts_remaining = self.attempts_remaining
         form.game_over = self.game_over
+        form.guesses = self.guesses
         form.message = message
         return form
     
@@ -73,12 +83,14 @@ class GameForm(messages.Message):
     """GameForm for outbound game state information"""
     urlsafe_key = messages.StringField(1, required=True)
     user_name = messages.StringField(2, required=True)
-    challenged = messages.StringField(3, required=True)
-    hint = messages.StringField(4, required=False)
-    difficulty = messages.StringField(5, required=True)
-    attempts_remaining = messages.IntegerField(6, required=True)
-    game_over = messages.BooleanField(7, required=True)
-    message = messages.StringField(8, required=True)
+    cur_view = messages.StringField(3, required=True)
+    challengee = messages.StringField(4, required=True)
+    hint = messages.StringField(5, required=False)
+    difficulty = messages.StringField(6, required=True)
+    attempts_remaining = messages.IntegerField(7, required=True)
+    game_over = messages.BooleanField(8, required=True)
+    guesses = messages.StringField(9, required=False, repeated=True)
+    message = messages.StringField(10, required=True)
 ##########################################################################
 
 class MakeMoveForm(messages.Message):
@@ -90,7 +102,7 @@ class ScoreForm(messages.Message):
     """ScoreForm for outbound Score information"""
     user_name = messages.StringField(1, required=True)
     won = messages.BooleanField(2, required=True)
-    date = messages.DateField(3, required=True)
+    date = message_types.DateTimeField(3, required=True)
     points = messages.IntegerField(4, required=True)
 
 
