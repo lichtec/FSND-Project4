@@ -9,3 +9,22 @@ class gameLogic():
         guesses = round(unique * guessCal[difficulty][0])
         points = unique * guessCal[difficulty][1]
         return guesses, points
+
+    def get_Cur_View(objective, cur_view, guess=''):
+        success = False
+        if guess == '':
+            for x in objective:
+                if x == ' ':
+                    cur_view = cur_view + ' '
+                else:
+                    cur_view = cur_view + '_'
+            return cur_view
+        else:
+            index = 0
+            for x in objective:
+                if x.lower() == guess.lower():
+                    cur_view = cur_view[:index] + x + cur_view[index+1:]
+                    success = True
+                index += 1
+		return cur_view, success
+
