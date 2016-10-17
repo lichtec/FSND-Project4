@@ -8,34 +8,28 @@ primarily with communication to/from the API's users."""
 import logging
 import endpoints
 from protorpc import remote, messages
-from google.appengine.api import memcache
-from google.appengine.api import taskqueue
+#from google.appengine.api import memcache
+#from google.appengine.api import taskqueue
 
-from models import User, Game, Score
-from models import StringMessage, GameForm, MakeMoveForm, ScoreForm,\
-    ScoreForms
+from models import User, StringMessage, Game, Score, GameForm, MakeMoveForm, ScoreForm, ScoreForms
 
 from utils import get_by_urlsafe
 
 from gameLogic import gameLogic
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(GameForm)
-GET_GAME_REQUEST = endpoints.ResourceContainer(
-        urlsafe_game_key=messages.StringField(1),)
-MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
-    MakeMoveForm,
-    urlsafe_game_key=messages.StringField(1),)
-USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
-                                           email=messages.StringField(2))
+GET_GAME_REQUEST = endpoints.ResourceContainer(urlsafe_game_key=messages.StringField(1))
+MAKE_MOVE_REQUEST = endpoints.ResourceContainer(MakeMoveForm, urlsafe_game_key=messages.StringField(1))
+USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1), email=messages.StringField(2))
+
 from settings import WEB_CLIENT_ID
 
 API_EXPLORER_CLIENT_ID = endpoints.API_EXPLORER_CLIENT_ID
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
 
-MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
+#MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
-@endpoints.api(name='hangman', version='v1', audiences=[WEB_CLIENT_ID],
-    allowed_client_ids=[WEB_CLIENT_ID, API_EXPLORER_CLIENT_ID],
+@endpoints.api(name='hangman', version='v1', allowed_client_ids=[WEB_CLIENT_ID, API_EXPLORER_CLIENT_ID],
     scopes=[EMAIL_SCOPE])
 class HangmanAPI(remote.Service):
     """Game API"""
@@ -43,7 +37,7 @@ class HangmanAPI(remote.Service):
                       response_message=StringMessage,
                       path='user',
                       name='create_user',
-                      http_method='POST')
+                      http_method='put')
     def create_user(self, request):
         """Create a User. Requires a unique username"""
         if User.query(User.name == request.user_name).get():
@@ -120,3 +114,4 @@ class HangmanAPI(remote.Service):
             else:
                 game.put()
                 return game.to_form('Terrible guess')
+api = endpoints.api_server([HangmanAPI])
