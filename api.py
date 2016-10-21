@@ -65,7 +65,7 @@ class HangmanAPI(remote.Service):
         print request.difficulty
         print challenged.key
         print request.hint
-        game = Game.new_game(challenger.key, request.objective, request.difficulty, challenged.key, request.hint)
+        game = Game.new_game(challenger.key[1], request.objective, request.difficulty, challenged.key[1], request.hint)
 
         return game.to_form('Good luck playing Guess a Number!')
 
