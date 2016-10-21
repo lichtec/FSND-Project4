@@ -25,7 +25,7 @@ class Game(ndb.Model):
     guesses = ndb.StringProperty(required=False, repeated=True)
     
     @classmethod
-    def new_game(challenger, objective, difficulty, challenged, hint):
+    def new_game(cls, challenger, objective, difficulty, challenged, hint):
         """Creates and returns a new game"""
         values = gameLogic.get_point_guesses(difficulty)
         game = Game( challenger=user,
