@@ -60,11 +60,13 @@ class HangmanAPI(remote.Service):
         if not challenger or not challenged:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        game = Game.new_game(challenger.key, request.objective, request.hint, request.difficulty, challenged.key)
-        # Use a task queue to update the average attempts remaining.
-        # This operation is not needed to complete the creation of a new game
-        # so it is performed out of sequence.
-        #taskqueue.add(url='/tasks/cache_average_attempts')
+        print challenger.key
+        print request.objective
+        print request.difficulty
+        print challenged.key
+        print request.hint
+        game = Game.new_game(challenger.key, request.objective, request.difficulty, challenged.key, request.hint)
+
         return game.to_form('Good luck playing Guess a Number!')
 
     @endpoints.method(request_message=GET_GAME_REQUEST,
