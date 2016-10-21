@@ -60,10 +60,10 @@ class HangmanAPI(remote.Service):
         if not challenger or not challenged:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        print challenger.key
+        print challenger.key[1]
         print request.objective
         print request.difficulty
-        print challenged.key
+        print challenged.key[1]
         print request.hint
         game = Game.new_game(challenger.key[1], request.objective, request.difficulty, challenged.key[1], request.hint)
 
