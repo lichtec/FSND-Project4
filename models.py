@@ -20,16 +20,16 @@ class Game(ndb.Model):
     attempts_remaining = ndb.IntegerProperty(required=True)
     points = ndb.IntegerProperty(required=True)
     game_over = ndb.BooleanProperty(required=True, default=False)
-    user = ndb.KeyProperty(required=True, kind='User')
-    challengee = ndb.KeyProperty(required=True, kind='User')
+    challenger = ndb.KeyProperty(required=True, kind='User')
+    challenged = ndb.KeyProperty(required=True, kind='User')
     guesses = ndb.StringProperty(required=False, repeated=True)
     
     @classmethod
-    def new_game(user, objective, difficulty, challengee, hint=''):
+    def new_game(challenger, objective, difficulty, challenged, hint=''):
         """Creates and returns a new game"""
         values = gameLogic.get_point_guesses(difficulty)
-        game = Game( user=user,
-                    chanllengee = challengee,
+        game = Game( challenger=user,
+                    challenged = challenged,
                     objective = objective,
                     cur_view = gameLogic.get_Cur_View(objective, '')[0],
                     hint = hint,
@@ -48,7 +48,7 @@ class Game(ndb.Model):
         form.urlsafe_key = self.key.urlsafe()
         form.user_name = self.user.get().name
         form.cur_view = self.cur_view
-        form.challengee = self.challengee
+        form.challenged = self.challenged
         form.hint = self.hint
         form.difficulty = self.difficulty
         form.attempts_remaining = self.attempts_remaining
@@ -82,16 +82,22 @@ class Score(ndb.Model):
 class GameForm(messages.Message):
     """GameForm for outbound game state information"""
     urlsafe_key = messages.StringField(1, required=True)
-    user_name = messages.StringField(2, required=True)
+    challenger = messages.StringField(2, required=True)
     cur_view = messages.StringField(3, required=True)
-    challengee = messages.StringField(4, required=True)
+    challenged = messages.StringField(4, required=True)
     hint = messages.StringField(5, required=False)
     difficulty = messages.StringField(6, required=True)
     attempts_remaining = messages.IntegerField(7, required=True)
     game_over = messages.BooleanField(8, required=True)
     guesses = messages.StringField(9, required=False, repeated=True)
     message = messages.StringField(10, required=True)
-##########################################################################
+
+class NewGameForm(messages.Message):
+    challenger = messages.StringField(1, required=True)
+    objective = messages.StringField(2, required=True)
+    challenged = messages.StringField(3, required=True)
+    hint = messages.StringField(4, required=False)
+    difficulty = messages.StringField(5, required=True)
 
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""

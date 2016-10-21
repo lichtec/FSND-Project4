@@ -11,13 +11,13 @@ from protorpc import remote, messages
 #from google.appengine.api import memcache
 #from google.appengine.api import taskqueue
 
-from models import User, StringMessage, Game, Score, GameForm, MakeMoveForm, ScoreForm, ScoreForms
+from models import User, StringMessage, Game, Score, GameForm, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms
 
 from utils import get_by_urlsafe
 
 from gameLogic import gameLogic
 
-NEW_GAME_REQUEST = endpoints.ResourceContainer(GameForm)
+NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(urlsafe_game_key=messages.StringField(1))
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(MakeMoveForm, urlsafe_game_key=messages.StringField(1))
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1), email=messages.StringField(2))
@@ -55,13 +55,12 @@ class HangmanAPI(remote.Service):
                       http_method='POST')
     def new_game(self, request):
         """Creates new game"""
-        challenger = User.query(User.name == request.user_name).get()
+        challenger = User.query(User.name == request.challenger).get()
         challenged = User.query(User.name == request.challenged).get()
         if not challenger or not challenged:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        game = Game.new_game(challenger, request.objective, request.hint, request.difficulty, challenged.key)
-
+        game = Game.new_game(challenger.key, request.objective, request.hint, request.difficulty, challenged.key)
         # Use a task queue to update the average attempts remaining.
         # This operation is not needed to complete the creation of a new game
         # so it is performed out of sequence.
