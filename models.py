@@ -63,7 +63,11 @@ class Game(ndb.Model):
         self.game_over = True
         self.put()
         # Add the game to the score 'board'
-        score = Score(user=self.user, date=date.today(), won=won,
+        if(won==True):
+            score = Score(user=self.challenged.get().name, date=date.today(), won=won,
+                      points=points)
+        else:
+            score = Score(user=self.challenger.get().name, date=date.today(), won=won,
                       points=points)
         score.put()
 
