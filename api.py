@@ -15,7 +15,7 @@ from models import User, StringMessage, Game, Score, GameForm, NewGameForm, Make
 
 from utils import get_by_urlsafe
 
-from gameLogic import gameLogic
+from gameLogic import *
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(urlsafe_game_key=messages.StringField(1))
@@ -98,8 +98,8 @@ class HangmanAPI(remote.Service):
             return game.to_form('Guess already made')
 
 
-        game.cur_view, success = gameLogic.get_Cur_View(game.objective, game.cur_view, request.guess)
-        game.guesses.append(guess)
+        game.cur_view, success = get_Cur_View(game.objective, game.cur_view, request.guess)
+        game.guesses.append(request.guess)
         if success:
             if game.cur_view == game.objective:
                 game.end_game(True)
@@ -108,7 +108,7 @@ class HangmanAPI(remote.Service):
                 game.put()
                 return game.to_form('Nice guess. Current results: {0}'.format(game.cur_view))
         else:
-            game.attemps_remaining -= 1
+            game.attempts_remaining -= 1
             if game.attempts_remaining < 1:
                 game.end_game(False)
                 return game.to_form('Terrible guess and now Game Over')

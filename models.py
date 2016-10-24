@@ -4,7 +4,7 @@ classes they can include methods (such as 'to_form' and 'new_game')."""
 
 from protorpc import messages, message_types
 from google.appengine.ext import ndb
-from gameLogic import gameLogic
+from gameLogic import *
 
 class User(ndb.Model):
     """User profile"""
@@ -27,14 +27,14 @@ class Game(ndb.Model):
     @classmethod
     def new_game(cls, challenger, objective, difficulty, challenged, hint):
         """Creates and returns a new game"""
-        values = gameLogic.get_point_guesses(difficulty)
-        game = Game( challenger=user,
+        values = get_point_guesses(difficulty, objective)
+        game = Game( challenger=challenger,
                     challenged = challenged,
                     objective = objective,
-                    cur_view = gameLogic.get_Cur_View(objective, '')[0],
+                    cur_view = get_Cur_View(objective, '', ''),
                     hint = hint,
                     difficulty = difficulty,
-                    attempts_remaining = values[0],
+                    attempts_remaining = int(values[0]),
                     points = values[1],
                     game_over=False,
                     guesses=[]
@@ -46,9 +46,9 @@ class Game(ndb.Model):
         """Returns a GameForm representation of the Game"""
         form = GameForm()
         form.urlsafe_key = self.key.urlsafe()
-        form.user_name = self.user.get().name
+        form.challenger = self.challenger.get().name
         form.cur_view = self.cur_view
-        form.challenged = self.challenged
+        form.challenged = self.challenged.get().name
         form.hint = self.hint
         form.difficulty = self.difficulty
         form.attempts_remaining = self.attempts_remaining
@@ -95,9 +95,9 @@ class GameForm(messages.Message):
 class NewGameForm(messages.Message):
     challenger = messages.StringField(1, required=True)
     objective = messages.StringField(2, required=True)
-    challenged = messages.StringField(3, required=True)
-    hint = messages.StringField(4, required=False)
-    difficulty = messages.StringField(5, required=True)
+    difficulty = messages.StringField(3, required=True)
+    challenged = messages.StringField(4, required=False)
+    hint = messages.StringField(5, required=True)
 
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
