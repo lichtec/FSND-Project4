@@ -66,18 +66,18 @@ class Game(ndb.Model):
         print date.today()
         # Add the game to the score 'board'
         if(won==True):
-            score = Score(user=self.challenged.get().name, date=date.today(), won=won,
+            score = Score(user=self.challenged, date=date.today(), won=won,
                       points=self.points)
         else:
-            score = Score(user=self.challenger.get().name, date=date.today(), won=won,
+            score = Score(user=self.challenger, date=date.today(), won=won,
                       points=self.points)
         score.put()
 
     
 class Score(ndb.Model):
-    won = ndb.BooleanProperty(required=True),
-    date = ndb.DateProperty(required=True),
-    points = ndb.IntegerProperty(required=True),
+    won = ndb.BooleanProperty(required=True)
+    date = ndb.DateProperty(required=True)
+    points = ndb.IntegerProperty(required=True)
     user = ndb.KeyProperty(required=True, kind='User')
 
     def to_form(self):
