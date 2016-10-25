@@ -60,11 +60,6 @@ class HangmanAPI(remote.Service):
         if not challenger or not challenged:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        print challenger.key
-        print request.objective
-        print request.difficulty
-        print challenged.key
-        print request.hint
         game = Game.new_game(challenger.key, request.objective, request.difficulty, challenged.key, request.hint)
 
         return game.to_form('Good luck playing Guess a Number!')
@@ -93,10 +88,8 @@ class HangmanAPI(remote.Service):
         if game.game_over:
             return game.to_form('Game already over!')
 
-#        game.attempts_remaining -= 1
         if request.guess in game.guesses:
             return game.to_form('Guess already made')
-
 
         game.cur_view, success = get_Cur_View(game.objective, game.cur_view, request.guess)
         game.guesses.append(request.guess)

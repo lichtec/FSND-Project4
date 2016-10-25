@@ -5,6 +5,7 @@ classes they can include methods (such as 'to_form' and 'new_game')."""
 from protorpc import messages, message_types
 from google.appengine.ext import ndb
 from gameLogic import *
+from datetime import date
 
 class User(ndb.Model):
     """User profile"""
@@ -62,13 +63,14 @@ class Game(ndb.Model):
         the player lost."""
         self.game_over = True
         self.put()
+        print date.today()
         # Add the game to the score 'board'
         if(won==True):
             score = Score(user=self.challenged.get().name, date=date.today(), won=won,
-                      points=points)
+                      points=self.points)
         else:
             score = Score(user=self.challenger.get().name, date=date.today(), won=won,
-                      points=points)
+                      points=self.points)
         score.put()
 
     
@@ -80,7 +82,7 @@ class Score(ndb.Model):
 
     def to_form(self):
         return ScoreForm(user_name=self.user.get().name, won=self.won,
-                         date=str(self.date), points=self.points)
+                         date=self.date, points=self.points)
 
 
 class GameForm(messages.Message):
