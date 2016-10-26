@@ -83,6 +83,8 @@ class Score(ndb.Model):
     date = ndb.DateProperty(required=True)
     points = ndb.IntegerProperty(required=True)
     user = ndb.KeyProperty(required=True, kind='User')
+    game = ndb.KeyProperty(required=True, kind='Game')
+
 
     @classmethod
     def to_form(self):
