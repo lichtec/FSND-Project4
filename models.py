@@ -70,7 +70,7 @@ class Game(ndb.Model):
             scoreLost = Score(user=self.challenger, date=date.today(), won=False,
                       points=0)
         else:
-            scoreWin = Score(user=self.challenger, date=date.today(), won=False,
+            scoreWin = Score(user=self.challenger, date=date.today(), won=True,
                       points=self.points)
             scoreLost = Score(user=self.challenged, date=date.today(), won=won,
                       points=0)
