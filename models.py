@@ -63,15 +63,19 @@ class Game(ndb.Model):
         the player lost."""
         self.game_over = True
         self.put()
-        print date.today()
         # Add the game to the score 'board'
         if(won==True):
-            score = Score(user=self.challenged, date=date.today(), won=won,
+            scoreWin = Score(user=self.challenged, date=date.today(), won=won,
                       points=self.points)
+            scoreLost = Score(user=self.challenger, date=date.today(), won=False,
+                      points=0)
         else:
-            score = Score(user=self.challenger, date=date.today(), won=won,
+            scoreWin = Score(user=self.challenger, date=date.today(), won=won,
                       points=self.points)
-        score.put()
+            scoreLost = Score(user=self.challenged, date=date.today(), won=False,
+                      points=0)
+        scoreWin.put()
+        scoreLost.put()
 
     
 class Score(ndb.Model):
@@ -80,6 +84,7 @@ class Score(ndb.Model):
     points = ndb.IntegerProperty(required=True)
     user = ndb.KeyProperty(required=True, kind='User')
 
+    @classmethod
     def to_form(self):
         return ScoreForm(user_name=self.user.get().name, won=self.won,
                          date=self.date, points=self.points)
