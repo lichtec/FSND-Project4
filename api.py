@@ -33,6 +33,7 @@ EMAIL_SCOPE = endpoints.EMAIL_SCOPE
     scopes=[EMAIL_SCOPE])
 class HangmanAPI(remote.Service):
     """Game API"""
+    ### USER Endpoints ###
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=StringMessage,
                       path='user',
@@ -48,6 +49,8 @@ class HangmanAPI(remote.Service):
         return StringMessage(message='User {} created!'.format(
                 request.user_name))
 
+
+    ### GAME Endjpoints ###
     @endpoints.method(request_message=NEW_GAME_REQUEST,
                       response_message=GameForm,
                       path='game',
@@ -79,6 +82,19 @@ class HangmanAPI(remote.Service):
         else:
             raise endpoints.NotFoundException('Game not found!')
 
+    @endpoints.method(request_message=USER_REQUEST,
+                      response_message=GameForms,
+                      path='game/user/{user_name}',
+                      name='get_user_games',
+                      http_method='GET')
+    def get_user_games(self, request):
+        """Returns all of an individual User's Games"""
+        user = User.query(User.name == request.user_name).get()
+        if not user:
+            raise endpoints.NotFoundException(
+                    'A User with that name does not exist!')
+        game = Game.query(Game.challenger == user.key OR Game.challenged == user.key)
+        return ScoreForms(items=[score.to_form() for score in scores])
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
                       response_message=GameForm,
                       path='game/{urlsafe_game_key}',
