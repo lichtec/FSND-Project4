@@ -63,17 +63,18 @@ class Game(ndb.Model):
         the player lost."""
         self.game_over = True
         self.put()
+        game = self.key
         # Add the game to the score 'board'
         if(won==True):
             scoreWin = Score(user=self.challenged, date=date.today(), won=won,
-                      points=self.points)
+                      points=self.points, game=game)
             scoreLost = Score(user=self.challenger, date=date.today(), won=False,
-                      points=0)
+                      points=0, game=game)
         else:
             scoreWin = Score(user=self.challenger, date=date.today(), won=True,
-                      points=self.points)
+                      points=self.points, game=game)
             scoreLost = Score(user=self.challenged, date=date.today(), won=won,
-                      points=0)
+                      points=0, game=game)
         scoreWin.put()
         scoreLost.put()
 

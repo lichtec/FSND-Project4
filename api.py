@@ -60,6 +60,8 @@ class HangmanAPI(remote.Service):
         if not challenger or not challenged:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
+        if challenger == challenged:
+            raise endpoints.ForbiddenException('Challenger and Challenged cannot be the same user.')
         game = Game.new_game(challenger.key, request.objective, request.difficulty, challenged.key, request.hint)
 
         return game.to_form('Good luck playing Guess a Number!')
