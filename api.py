@@ -93,8 +93,9 @@ class HangmanAPI(remote.Service):
         if not user:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        game = Game.query(Game.challenger == user.key OR Game.challenged == user.key)
-        return ScoreForms(items=[score.to_form() for score in scores])
+        games = GQLQuery('SELECT * FROM Game WHERE challenger = user.key OR challenged == user.key')
+        return GameForms(items=[game.to_form() for game in games])
+
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
                       response_message=GameForm,
                       path='game/{urlsafe_game_key}',

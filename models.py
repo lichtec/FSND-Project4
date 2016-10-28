@@ -113,6 +113,10 @@ class NewGameForm(messages.Message):
     challenged = messages.StringField(4, required=False)
     hint = messages.StringField(5, required=True)
 
+class GameForms(messages.Message):
+    """Return multiple ScoreForms"""
+    items = messages.MessageField(GameForm, 1, repeated=True)
+
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
     guess = messages.StringField(1, required=True)
