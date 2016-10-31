@@ -8,10 +8,11 @@ primarily with communication to/from the API's users."""
 import logging
 import endpoints
 from protorpc import remote, messages
+from google.appengine.ext import ndb
 #from google.appengine.api import memcache
 #from google.appengine.api import taskqueue
 
-from models import User, StringMessage, Game, Score, GameForm, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms
+from models import User, StringMessage, Game, Score, GameForm, GameForms, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms
 
 from utils import get_by_urlsafe
 
@@ -93,7 +94,10 @@ class HangmanAPI(remote.Service):
         if not user:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        games = GQLQuery('SELECT * FROM Game WHERE challenger = user.key OR challenged == user.key')
+        games = Game.query(ndb.AND(Game.game_over == False,
+                                   ndb.AND(Game.cancel == False,
+                                           ndb.OR(Game.challenger == user.key,
+                                          Game.challenged == user.key))))
         return GameForms(items=[game.to_form() for game in games])
 
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
@@ -109,6 +113,9 @@ class HangmanAPI(remote.Service):
 
         if request.guess in game.guesses:
             return game.to_form('Guess already made')
+
+        if len(request.guess) > 1:
+            return game.to_form('Guess can be only 1 character')
 
         game.cur_view, success = get_Cur_View(game.objective, game.cur_view, request.guess)
         game.guesses.append(request.guess)
@@ -127,4 +134,22 @@ class HangmanAPI(remote.Service):
             else:
                 game.put()
                 return game.to_form('Terrible guess')
+
+    @endpoints.method(request_message=GET_GAME_REQUEST,
+                      response_message=GameForm,
+                      path='game/cancel/{urlsafe_game_key}',
+                      name='cancel_game',
+                      http_method='POST')
+    def cancel_game(self, request):
+        """Cancel a game"""
+        game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        if game:
+            if game.game_over:
+                return game.to_form('Game cannot be cancelled, game over')
+            else:
+                game.cancel = True
+                game.put()
+                return game.to_form('Game cancelled.')
+        else:
+            raise endpoints.NotFoundException('Game not found!')
 api = endpoints.api_server([HangmanAPI])

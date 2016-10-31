@@ -21,6 +21,7 @@ class Game(ndb.Model):
     attempts_remaining = ndb.IntegerProperty(required=True)
     points = ndb.IntegerProperty(required=True)
     game_over = ndb.BooleanProperty(required=True, default=False)
+    cancel = ndb.BooleanProperty(required=True, default=False)
     challenger = ndb.KeyProperty(required=True, kind='User')
     challenged = ndb.KeyProperty(required=True, kind='User')
     guesses = ndb.StringProperty(required=False, repeated=True)
@@ -38,12 +39,13 @@ class Game(ndb.Model):
                     attempts_remaining = int(values[0]),
                     points = values[1],
                     game_over=False,
+                    cancel=False,
                     guesses=[]
                    )
         game.put()
         return game
     
-    def to_form(self, message):
+    def to_form(self, message=''):
         """Returns a GameForm representation of the Game"""
         form = GameForm()
         form.urlsafe_key = self.key.urlsafe()
@@ -54,6 +56,7 @@ class Game(ndb.Model):
         form.difficulty = self.difficulty
         form.attempts_remaining = self.attempts_remaining
         form.game_over = self.game_over
+        form.cancel = self.cancel
         form.guesses = self.guesses
         form.message = message
         return form
@@ -103,8 +106,9 @@ class GameForm(messages.Message):
     difficulty = messages.StringField(6, required=True)
     attempts_remaining = messages.IntegerField(7, required=True)
     game_over = messages.BooleanField(8, required=True)
-    guesses = messages.StringField(9, required=False, repeated=True)
-    message = messages.StringField(10, required=True)
+    cancel = messages.BooleanField(9, required=True)
+    guesses = messages.StringField(10, required=False, repeated=True)
+    message = messages.StringField(11, required=True)
 
 class NewGameForm(messages.Message):
     challenger = messages.StringField(1, required=True)
