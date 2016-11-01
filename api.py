@@ -12,7 +12,7 @@ from google.appengine.ext import ndb
 #from google.appengine.api import memcache
 #from google.appengine.api import taskqueue
 
-from models import User, StringMessage, Game, Score, GameForm, GameForms, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms
+from models import User, StringMessage, Game, Score, GameForm, GameForms, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms, NewUserForm, UserForm
 
 from utils import get_by_urlsafe
 
@@ -21,7 +21,8 @@ from gameLogic import *
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(urlsafe_game_key=messages.StringField(1))
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(MakeMoveForm, urlsafe_game_key=messages.StringField(1))
-USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1), email=messages.StringField(2))
+USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1))
+NEW_USER_REQUEST = endpoints.ResourceContainer(NewUserForm)
 
 from settings import WEB_CLIENT_ID
 
@@ -35,20 +36,18 @@ EMAIL_SCOPE = endpoints.EMAIL_SCOPE
 class HangmanAPI(remote.Service):
     """Game API"""
     ### USER Endpoints ###
-    @endpoints.method(request_message=USER_REQUEST,
-                      response_message=StringMessage,
+    @endpoints.method(request_message=NEW_USER_REQUEST,
+                      response_message=UserForm,
                       path='user',
                       name='create_user',
                       http_method='put')
     def create_user(self, request):
         """Create a User. Requires a unique username"""
-        if User.query(User.name == request.user_name).get():
+        if User.query(User.name == request.name).get():
             raise endpoints.ConflictException(
                     'A User with that name already exists!')
-        user = User(name=request.user_name, email=request.email)
-        user.put()
-        return StringMessage(message='User {} created!'.format(
-                request.user_name))
+        user = User.new_user(name=request.name, email=request.email, total_points=request.total_points)
+        return user.to_form('Welcome {} to hangman!'.format(user.name))
 
 
     ### GAME Endjpoints ###

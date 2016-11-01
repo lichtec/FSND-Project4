@@ -10,7 +10,20 @@ from datetime import date
 class User(ndb.Model):
     """User profile"""
     name = ndb.StringProperty(required=True)
-    email =ndb.StringProperty()
+    email = ndb.StringProperty(required=True)
+    total_points = ndb.IntegerProperty(required=True)
+
+    @classmethod
+    def new_user(cls, name, email, total_points):
+        user = User(name = name,
+                   email = email,
+                   total_points = total_points
+                   )
+        user.put()
+        return user
+
+    def to_form(self, message):
+        return UserForm(name = self.name, email = self.email, total_points = self.total_points, message = message)
     
 class Game(ndb.Model):
     """Game object"""
@@ -95,6 +108,17 @@ class Score(ndb.Model):
         return ScoreForm(user_name=self.user.get().name, won=self.won,
                          date=self.date, points=self.points)
 
+class NewUserForm(messages.Message):
+    name = messages.StringField(1, required=True)
+    email = messages.StringField(2, required=True)
+    total_points = messages.IntegerField(3, required=True)
+
+
+class UserForm(messages.Message):
+    name = messages.StringField(1, required=True)
+    email = messages.StringField(2, required=True)
+    total_points = messages.IntegerField(3, required=True)
+    message = messages.StringField(4, required=True)
 
 class GameForm(messages.Message):
     """GameForm for outbound game state information"""
