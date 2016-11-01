@@ -194,4 +194,5 @@ class HangmanAPI(remote.Service):
     def get_ranks(self, request):
         users = User.query().order(-User.total_points)
         return UserForms(items=[user.to_form('') for user in users])
+
 api = endpoints.api_server([HangmanAPI])
