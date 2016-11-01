@@ -79,7 +79,7 @@ class HangmanAPI(remote.Service):
                               'gameInfo': repr(game)},
             url='/tasks/send_confirmation_email'
         )
-        return game.to_form('Good luck playing Guess a Number!')
+        return game.to_form('Good luck playing Hangman!')
 
     @endpoints.method(request_message=GET_GAME_REQUEST,
                       response_message=GameForm,
@@ -146,6 +146,10 @@ class HangmanAPI(remote.Service):
         if success:
             if game.cur_view == game.objective:
                 game.end_game(True)
+                taskqueue.add(params={'email': challenger.email,
+                              'challenger':challenged.name,
+                              'gameInfo': repr(game)},
+                              url='/tasks/send_end_game_email')
                 return game.to_form('You Win. {0} points awarded'.format(game.points))
             else:
                 game.put()
@@ -154,6 +158,10 @@ class HangmanAPI(remote.Service):
             game.attempts_remaining -= 1
             if game.attempts_remaining < 1:
                 game.end_game(False)
+                taskqueue.add(params={'email': challenger.email,
+                              'challenger':challenged.name,
+                              'gameInfo': repr(game)},
+                              url='/tasks/send_end_game_email')
                 return game.to_form('Terrible guess and now Game Over')
             else:
                 game.put()
