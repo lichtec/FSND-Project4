@@ -3,6 +3,10 @@
 #"""main.py - This file includes generic landing page handler and handlers that are called by taskqueue and/or cronjobs."""
 
 import logging
+import webapp2
+from google.appengine.api import app_identity
+from google.appengine.api import mail
+from api import HangmanAPI
 
 from flask import Flask
 
@@ -18,6 +22,30 @@ def server_error(e):
     logging.exception('An error occurred during a request.')
     return 'An internal error occurred.', 500
 
+#class SetAnnouncementHandler(webapp2.RequestHandler):
+#    def get(self):
+#        """Set Announcement in Memcache."""
+#        # TODO 1
+#        ConferenceApi._cacheAnnouncement()
+
+
+
+class SendConfirmationEmailHandler(webapp2.RequestHandler):
+    def post(self):
+        """Send email regarding challenge."""
+
+        mail.send_mail(
+            'noreply@%s.appspotmail.com' % (
+                app_identity.get_application_id()),     # from
+            self.request.get('email'),                  # to
+            'You have been challenged by {}'.format(self.get.request.get('challenger')),            # subj
+            '{}'.format(self.request.get(gameInfo))
+        )
+
+
+app = webapp2.WSGIApplication([
+    ('/tasks/send_confirmation_email', SendConfirmationEmailHandler)
+], debug=True)
 ##from google.appengine.api import mail, app_identity
 #from api import HangmanAPI
 ##from models import User

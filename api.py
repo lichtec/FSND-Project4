@@ -10,7 +10,7 @@ import endpoints
 from protorpc import remote, messages
 from google.appengine.ext import ndb
 #from google.appengine.api import memcache
-#from google.appengine.api import taskqueue
+from google.appengine.api import taskqueue
 
 from models import User, StringMessage, Game, Score, GameForm, GameForms, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms, NewUserForm, UserForm, UserForms
 
@@ -29,8 +29,6 @@ from settings import WEB_CLIENT_ID
 
 API_EXPLORER_CLIENT_ID = endpoints.API_EXPLORER_CLIENT_ID
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
-
-#MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
 @endpoints.api(name='hangman', version='v1', allowed_client_ids=[WEB_CLIENT_ID, API_EXPLORER_CLIENT_ID],
     scopes=[EMAIL_SCOPE])
@@ -76,7 +74,11 @@ class HangmanAPI(remote.Service):
         if challenger == challenged:
             raise endpoints.ForbiddenException('Challenger and Challenged cannot be the same user.')
         game = Game.new_game(challenger.key, request.objective, request.difficulty, challenged.key, request.hint)
-
+        taskqueue.add(params={'email': challenged.email,
+                              'challenger':challenger.name,
+                              'gameInfo': repr(game)},
+            url='/tasks/send_confirmation_email'
+        )
         return game.to_form('Good luck playing Guess a Number!')
 
     @endpoints.method(request_message=GET_GAME_REQUEST,

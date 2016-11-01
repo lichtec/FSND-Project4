@@ -12,7 +12,9 @@ handlers:
 - url: /.*
   script: main.app
 
-
+- url: /tasks/send_confirmation_email
+  script: main.app
+  login: admin
 
 #- url: /favicon\.ico
 #  static_files: favicon.ico
