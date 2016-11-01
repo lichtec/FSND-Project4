@@ -12,7 +12,7 @@ from google.appengine.ext import ndb
 #from google.appengine.api import memcache
 #from google.appengine.api import taskqueue
 
-from models import User, StringMessage, Game, Score, GameForm, GameForms, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms, NewUserForm, UserForm
+from models import User, StringMessage, Game, Score, GameForm, GameForms, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms, NewUserForm, UserForm, UserForms
 
 from utils import get_by_urlsafe
 
@@ -161,4 +161,12 @@ class HangmanAPI(remote.Service):
                 return game.to_form('Game cancelled.')
         else:
             raise endpoints.NotFoundException('Game not found!')
+
+    @endpoints.method(response_message=UserForms,
+                     path='ranks',
+                     name='get_ranks',
+                     http_method='GET')
+    def get_ranks(self, request):
+        users = User.query().order(-User.total_points)
+        return UserForms(items=[user.to_form('') for user in users])
 api = endpoints.api_server([HangmanAPI])
