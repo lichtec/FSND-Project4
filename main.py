@@ -42,9 +42,21 @@ class SendConfirmationEmailHandler(webapp2.RequestHandler):
             '{}'.format(self.request.get(gameInfo))
         )
 
+class SendConfirmationEmailHandler(webapp2.RequestHandler):
+    def post(self):
+        """Send email regarding challenge."""
+
+        mail.send_mail(
+            'noreply@%s.appspotmail.com' % (
+                app_identity.get_application_id()),# from
+            self.request.get('email'),# to
+            '{} Completed Your Challenge'.format(self.get.request.get('challenged')),            # subj
+            '{}'.format(self.request.get(gameInfo))
+        )
 
 app = webapp2.WSGIApplication([
-    ('/tasks/send_confirmation_email', SendConfirmationEmailHandler)
+    ('/tasks/send_confirmation_email', SendConfirmationEmailHandler),
+    ('/tasks/send_end_game_email', SendEndGameEmailHandler)
 ], debug=True)
 ##from google.appengine.api import mail, app_identity
 #from api import HangmanAPI

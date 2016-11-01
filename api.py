@@ -132,6 +132,8 @@ class HangmanAPI(remote.Service):
     def make_move(self, request):
         """Makes a move. Returns a game state with message"""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        challenged = game.challenged.get()
+        challenger = game.challenger.get()
         if game.game_over:
             return game.to_form('Game already over!')
 
@@ -147,7 +149,7 @@ class HangmanAPI(remote.Service):
             if game.cur_view == game.objective:
                 game.end_game(True)
                 taskqueue.add(params={'email': challenger.email,
-                              'challenger':challenged.name,
+                              'challenged':challenged.name,
                               'gameInfo': repr(game)},
                               url='/tasks/send_end_game_email')
                 return game.to_form('You Win. {0} points awarded'.format(game.points))
@@ -159,7 +161,7 @@ class HangmanAPI(remote.Service):
             if game.attempts_remaining < 1:
                 game.end_game(False)
                 taskqueue.add(params={'email': challenger.email,
-                              'challenger':challenged.name,
+                              'challenged':challenged.name,
                               'gameInfo': repr(game)},
                               url='/tasks/send_end_game_email')
                 return game.to_form('Terrible guess and now Game Over')
