@@ -23,6 +23,7 @@ GET_GAME_REQUEST = endpoints.ResourceContainer(urlsafe_game_key=messages.StringF
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(MakeMoveForm, urlsafe_game_key=messages.StringField(1))
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1))
 NEW_USER_REQUEST = endpoints.ResourceContainer(NewUserForm)
+GET_USER_REQUEST = endpoints.ResourceContainer(user_name = messages.StringField(1))
 
 from settings import WEB_CLIENT_ID
 
@@ -49,8 +50,17 @@ class HangmanAPI(remote.Service):
         user = User.new_user(name=request.name, email=request.email, total_points=request.total_points)
         return user.to_form('Welcome {} to hangman!'.format(user.name))
 
+    @endpoints.method(request_message=GET_USER_REQUEST,
+                      response_message=UserForm,
+                      path='user/{user_name}',
+                      name='get_user',
+                      http_method='get')
+    def get_user(self, request):
+        """Get a User."""
+        user = User.query(User.name == request.user_name).get()
+        return user.to_form('Welcome {} to hangman!'.format(user.name))
 
-    ### GAME Endjpoints ###
+    ### GAME Endpoints ###
     @endpoints.method(request_message=NEW_GAME_REQUEST,
                       response_message=GameForm,
                       path='game',

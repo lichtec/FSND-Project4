@@ -120,6 +120,10 @@ class UserForm(messages.Message):
     total_points = messages.IntegerField(3, required=True)
     message = messages.StringField(4, required=True)
 
+class UserForms(messages.Message):
+    """Return multiple UserForm"""
+    items = messages.MessageField(UserForm, 1, repeated=True)
+
 class GameForm(messages.Message):
     """GameForm for outbound game state information"""
     urlsafe_key = messages.StringField(1, required=True)
