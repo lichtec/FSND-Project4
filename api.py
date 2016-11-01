@@ -92,6 +92,19 @@ class HangmanAPI(remote.Service):
         else:
             raise endpoints.NotFoundException('Game not found!')
 
+    @endpoints.method(request_message=GET_GAME_REQUEST,
+                      response_message=GameForm,
+                      path='game/{urlsafe_game_key}/history',
+                      name='get_game_history',
+                      http_method='GET')
+    def get_game_history(self, request):
+        """Return the current game state."""
+        game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        if game:
+            return game.to_form('')
+        else:
+            raise endpoints.NotFoundException('Game not found!')
+
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=GameForms,
                       path='game/user/{user_name}',
@@ -127,7 +140,7 @@ class HangmanAPI(remote.Service):
             return game.to_form('Guess can be only 1 character')
 
         game.cur_view, success = get_Cur_View(game.objective, game.cur_view, request.guess)
-        game.guesses.append(request.guess)
+        game.guesses.append('Guess: {0}, Result {1}, Current View: {2}'.format(request.guess, success, game.cur_view))
         if success:
             if game.cur_view == game.objective:
                 game.end_game(True)
