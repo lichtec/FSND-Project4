@@ -192,6 +192,7 @@ class HangmanAPI(remote.Service):
                      name='get_ranks',
                      http_method='GET')
     def get_ranks(self, request):
+        """Get all user rankings."""
         users = User.query().order(-User.total_points)
         return UserForms(items=[user.to_form('') for user in users])
 
