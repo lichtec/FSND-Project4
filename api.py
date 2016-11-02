@@ -9,32 +9,34 @@ import logging
 import endpoints
 from protorpc import remote, messages
 from google.appengine.ext import ndb
-#from google.appengine.api import memcache
 from google.appengine.api import taskqueue
-
-from models import User, StringMessage, Game, Score, GameForm, GameForms, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms, NewUserForm, UserForm, UserForms
-
 from utils import get_by_urlsafe
-
+from settings import WEB_CLIENT_ID
 from gameLogic import *
+from models import User, StringMessage, Game, Score, GameForm, GameForms,
+NewGameForm, MakeMoveForm, ScoreForm, ScoreForms, NewUserForm, UserForm,
+UserForms
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
-GET_GAME_REQUEST = endpoints.ResourceContainer(urlsafe_game_key=messages.StringField(1))
-MAKE_MOVE_REQUEST = endpoints.ResourceContainer(MakeMoveForm, urlsafe_game_key=messages.StringField(1))
+GET_GAME_REQUEST = endpoints.ResourceContainer(
+    urlsafe_game_key=messages.StringField(1))
+MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
+    MakeMoveForm, urlsafe_game_key=messages.StringField(1))
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1))
 NEW_USER_REQUEST = endpoints.ResourceContainer(NewUserForm)
-GET_USER_REQUEST = endpoints.ResourceContainer(user_name = messages.StringField(1))
-
-from settings import WEB_CLIENT_ID
+GET_USER_REQUEST = endpoints.ResourceContainer(
+    user_name=messages.StringField(1))
 
 API_EXPLORER_CLIENT_ID = endpoints.API_EXPLORER_CLIENT_ID
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
 
-@endpoints.api(name='hangman', version='v1', allowed_client_ids=[WEB_CLIENT_ID, API_EXPLORER_CLIENT_ID],
-    scopes=[EMAIL_SCOPE])
+
+@endpoints.api(name='hangman', version='v1',
+               allowed_client_ids=[WEB_CLIENT_ID, API_EXPLORER_CLIENT_ID],
+               scopes=[EMAIL_SCOPE])
 class HangmanAPI(remote.Service):
     """Game API"""
-    ### USER Endpoints ###
+    # USER Endpoints
     @endpoints.method(request_message=NEW_USER_REQUEST,
                       response_message=UserForm,
                       path='user',
@@ -45,7 +47,8 @@ class HangmanAPI(remote.Service):
         if User.query(User.name == request.name).get():
             raise endpoints.ConflictException(
                     'A User with that name already exists!')
-        user = User.new_user(name=request.name, email=request.email, total_points=request.total_points)
+        user = User.new_user(name=request.name, email=request.email,
+                             total_points=request.total_points)
         return user.to_form('Welcome {} to hangman!'.format(user.name))
 
     @endpoints.method(request_message=GET_USER_REQUEST,
@@ -58,7 +61,7 @@ class HangmanAPI(remote.Service):
         user = User.query(User.name == request.user_name).get()
         return user.to_form('Welcome {} to hangman!'.format(user.name))
 
-    ### GAME Endpoints ###
+    # GAME Endpoints
     @endpoints.method(request_message=NEW_GAME_REQUEST,
                       response_message=GameForm,
                       path='game',
@@ -72,13 +75,14 @@ class HangmanAPI(remote.Service):
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
         if challenger == challenged:
-            raise endpoints.ForbiddenException('Challenger and Challenged cannot be the same user.')
-        game = Game.new_game(challenger.key, request.objective, request.difficulty, challenged.key, request.hint)
+            raise endpoints.ForbiddenException('Challenger and Challenged\
+                                               cannot be the same user.')
+        game = Game.new_game(challenger.key, request.objective,
+                             request.difficulty, challenged.key, request.hint)
         taskqueue.add(params={'email': challenged.email,
-                              'challenger':challenger.name,
+                              'challenger': challenger.name,
                               'gameInfo': repr(game)},
-            url='/tasks/send_confirmation_email'
-        )
+                      url='/tasks/send_confirmation_email')
         return game.to_form('Good luck playing Hangman!')
 
     @endpoints.method(request_message=GET_GAME_REQUEST,
@@ -118,10 +122,13 @@ class HangmanAPI(remote.Service):
         if not user:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        games = Game.query(ndb.AND(Game.game_over == False,
-                                   ndb.AND(Game.cancel == False,
-                                           ndb.OR(Game.challenger == user.key,
-                                          Game.challenged == user.key))))
+        games = Game.query(ndb.AND(
+            Game.game_over == False,
+            ndb.AND(
+                Game.cancel == False,
+                ndb.OR(
+                    Game.challenger == user.key,
+                    Game.challenged == user.key))))
         return GameForms(items=[game.to_form() for game in games])
 
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
@@ -143,27 +150,33 @@ class HangmanAPI(remote.Service):
         if len(request.guess) > 1:
             return game.to_form('Guess can be only 1 character')
 
-        game.cur_view, success = get_Cur_View(game.objective, game.cur_view, request.guess)
-        game.guesses.append('Guess: {0}, Result {1}, Current View: {2}'.format(request.guess, success, game.cur_view))
+        game.cur_view, success = get_Cur_View(game.objective,
+                                              game.cur_view, request.guess)
+        game.guesses.append('Guess: {0}, Result {1}, Current View: {2}'.format(
+            request.guess, success, game.cur_view))
         if success:
             if game.cur_view == game.objective:
                 game.end_game(True)
-                taskqueue.add(params={'email': challenger.email,
-                              'challenged':challenged.name,
-                              'gameInfo': repr(game)},
-                              url='/tasks/send_end_game_email')
-                return game.to_form('You Win. {0} points awarded'.format(game.points))
+                taskqueue.add(
+                    params={'email': challenger.email,
+                            'challenged': challenged.name,
+                            'gameInfo': repr(game)},
+                    url='/tasks/send_end_game_email')
+                return game.to_form('You Win. {0} points awarded'.format(
+                    game.points))
             else:
                 game.put()
-                return game.to_form('Nice guess. Current results: {0}'.format(game.cur_view))
+                return game.to_form('Nice guess. Current results: {0}'.format(
+                    game.cur_view))
         else:
             game.attempts_remaining -= 1
             if game.attempts_remaining < 1:
                 game.end_game(False)
-                taskqueue.add(params={'email': challenger.email,
-                              'challenged':challenged.name,
-                              'gameInfo': repr(game)},
-                              url='/tasks/send_end_game_email')
+                taskqueue.add(
+                    params={'email': challenger.email,
+                            'challenged': challenged.name,
+                            'gameInfo': repr(game)},
+                    url='/tasks/send_end_game_email')
                 return game.to_form('Terrible guess and now Game Over')
             else:
                 game.put()
@@ -187,10 +200,11 @@ class HangmanAPI(remote.Service):
         else:
             raise endpoints.NotFoundException('Game not found!')
 
-    @endpoints.method(response_message=UserForms,
-                     path='ranks',
-                     name='get_ranks',
-                     http_method='GET')
+    @endpoints.method(
+        response_message=UserForms,
+        path='ranks',
+        name='get_ranks',
+        http_method='GET')
     def get_ranks(self, request):
         """Get all user rankings."""
         users = User.query().order(-User.total_points)
