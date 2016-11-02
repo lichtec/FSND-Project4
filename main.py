@@ -54,7 +54,7 @@ class SendConfirmationEmailHandler(webapp2.RequestHandler):
             '{}'.format(self.request.get(gameInfo))
         )
 
-class SendReminderEmail(webapp2.RequestHandler):
+class SendEndGameEmailHandler(webapp2.RequestHandler):
     def get(self):
         """Send a reminder email to each User with an email about games.
         Called every hour using a cron job"""
