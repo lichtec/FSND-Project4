@@ -6,7 +6,10 @@ import logging
 import webapp2
 from google.appengine.api import app_identity
 from google.appengine.api import mail
+from google.appengine.ext import ndb
 from api import HangmanAPI
+
+from models import User, Game
 
 from flask import Flask
 
@@ -22,14 +25,6 @@ def server_error(e):
     logging.exception('An error occurred during a request.')
     return 'An internal error occurred.', 500
 
-#class SetAnnouncementHandler(webapp2.RequestHandler):
-#    def get(self):
-#        """Set Announcement in Memcache."""
-#        # TODO 1
-#        ConferenceApi._cacheAnnouncement()
-
-
-
 class SendConfirmationEmailHandler(webapp2.RequestHandler):
     def post(self):
         """Send email regarding challenge."""
@@ -38,26 +33,26 @@ class SendConfirmationEmailHandler(webapp2.RequestHandler):
             'noreply@%s.appspotmail.com' % (
                 app_identity.get_application_id()),     # from
             self.request.get('email'),                  # to
-            'You have been challenged by {}'.format(self.get.request.get('challenger')),            # subj
-            '{}'.format(self.request.get(gameInfo))
+            'You have been challenged by {}'.format(self.request.get('challenger')),            # subj
+            '{}'.format(self.request.get('gameInfo'))
         )
 
 class SendEndGameEmailHandler(webapp2.RequestHandler):
     def post(self):
-        """Send email regarding challenge."""
+        """Send email regarding game end to challenger."""
 
         mail.send_mail(
             'noreply@%s.appspotmail.com' % (
                 app_identity.get_application_id()),# from
             self.request.get('email'),# to
-            '{} Completed Your Challenge'.format(self.get.request.get('challenged')),            # subj
-            '{}'.format(self.request.get(gameInfo))
+            '{} Completed Your Challenge'.format(self.request.get('challenged')),            # subj
+            '{}'.format(self.request.get('gameInfo'))
         )
 
 class SendReminderEmail(webapp2.RequestHandler):
     def get(self):
-        """Send a reminder email to each User with an email about games.
-        Called every hour using a cron job"""
+        """Send a reminder email to each User that has an active game
+        runs every 12 hours"""
         app_id = app_identity.get_application_id()
         users = User.query(User.email != None)
         reminder = []
@@ -81,17 +76,3 @@ app = webapp2.WSGIApplication([
     ('/tasks/send_confirmation_email', SendConfirmationEmailHandler),
     ('/tasks/send_end_game_email', SendEndGameEmailHandler)
 ], debug=True)
-##from google.appengine.api import mail, app_identity
-#from api import HangmanAPI
-##from models import User
-#
-#
-##
-##class UpdateAverageMovesRemaining(webapp2.RequestHandler):
-##    def post(self):
-##        """Update game listing announcement in memcache."""
-##        GuessANumberApi._cache_average_attempts()
-##        self.response.set_status(204)
-##
-#
-#app = webapp2.WSGIApplication([], debug=True)

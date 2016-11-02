@@ -75,8 +75,8 @@ class Game(ndb.Model):
         return form
     
     def end_game(self, won=False):
-        """Ends the game - if won is True, the player won. - if won is False,
-        the player lost."""
+        """Ends the game - if won is True, the challenged won. - if won is False,
+        the challenged lost."""
         self.game_over = True
         self.put()
         game = self.key
@@ -105,6 +105,7 @@ class Score(ndb.Model):
 
     @classmethod
     def to_form(self):
+        """Returns a ScoreForm representation of the Score"""
         return ScoreForm(user_name=self.user.get().name, won=self.won,
                          date=self.date, points=self.points)
 
@@ -115,6 +116,7 @@ class NewUserForm(messages.Message):
 
 
 class UserForm(messages.Message):
+    """UserForm for outbound user info"""
     name = messages.StringField(1, required=True)
     email = messages.StringField(2, required=True)
     total_points = messages.IntegerField(3, required=True)

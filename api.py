@@ -87,7 +87,7 @@ class HangmanAPI(remote.Service):
                       name='get_game',
                       http_method='GET')
     def get_game(self, request):
-        """Return the current game state."""
+        """Return current game state."""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if game:
             return game.to_form('Time to make a move!')
@@ -100,7 +100,7 @@ class HangmanAPI(remote.Service):
                       name='get_game_history',
                       http_method='GET')
     def get_game_history(self, request):
-        """Return the current game state."""
+        """Return the history of a game."""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if game:
             return game.to_form('')
