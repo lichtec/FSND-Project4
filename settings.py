@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 """settings.py
-
 """
 
 # Replace the following lines with client IDs obtained from the APIs
