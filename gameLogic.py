@@ -1,7 +1,9 @@
 """Simple module to return the point value and guesses
 from the difficulty of an objective"""
 
-guessCal = {'SUPER_EASY':[2.0, 1], 'EASY':[1.0,2], 'MEDIUM':[.5,3], 'HARD':[.25,4], 'STUPID':[0,5]}
+guessCal = {'SUPER_EASY': [2.0, 1], 'EASY': [1.0, 2],
+            'MEDIUM': [.5, 3], 'HARD': [.25, 4], 'STUPID': [0, 5]}
+
 
 def get_point_guesses(difficulty, objective):
     unique = len(set(objective))
@@ -10,6 +12,7 @@ def get_point_guesses(difficulty, objective):
         guesses = 1
     points = unique * guessCal[difficulty][1]
     return guesses, points
+
 
 def get_Cur_View(objective, cur_view, guess):
     success = False
@@ -28,4 +31,3 @@ def get_Cur_View(objective, cur_view, guess):
                 success = True
             index += 1
         return cur_view, success
-
