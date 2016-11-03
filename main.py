@@ -62,7 +62,7 @@ class SendReminderEmail(webapp2.RequestHandler):
         """Send a reminder email to each User that has an active game
         runs every 12 hours"""
         app_id = app_identity.get_application_id()
-        users = User.query(User.email is not None)
+        users = User.query(User.email <> None)
         reminder = []
         for user in users:
             if(Game.query(

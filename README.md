@@ -5,7 +5,8 @@ Udacity Full Stack Nanodegree Project 4. Creating a Google Appengine web applica
 
 ##Game Description:
 Hangman is a phrase guessing game. Each game is initiated with a challenger and 
-a challenged. The challenger sets the objective, the difficulty, the challenged, 
+a challenged. The challenger sets the objective, the difficulty (must 
+be the followingg: UPER_EASY, EASY, MEDIUM, HARD, STUPID, the challenged, 
 the challenger(themselves) and a hint. The game logic then sets the attempts remaining,
 points, and the current view. The challenged receives an email notification 
 about the game. Then the challenged can reveiw the game or make move. A move is a
@@ -13,6 +14,27 @@ single character. If they are right then they don't loose an attempt, if they ar
 then they loose a remaining attemp. If they are out of attempts, the challenged looses
 the game and the points are awarded to the challenger. If they get the objective correct
 before the attempts run out, they receive the points. A user can cancel an active game.
+
+##Notes on Attempts
+When setting the difficulty this also relates to the attempts allowed. The attempts are
+calculated in the following way.
+- 'SUPER_EASY': 2 per unique character
+- 'EASY': 1 per unique character
+- 'MEDIUM': .5 per unique character 
+- 'HARD': .25 per unique character
+- 'STUPID': one attempt only
+
+##Scoring
+Difficulty also sets the points and scoring. Points are calculated in the following way.
+- 'SUPER_EASY': 1 per unique character
+- 'EASY': 2 per unique character
+- 'MEDIUM': 3 per unique character 
+- 'HARD': 4 per unique character
+- 'STUPID': 5 per unique character
+
+Points are awarded to the challenger when the challenged does not guess the objective in the 
+allowed attempts. If the challenged does guess the objective in the allowed attempts then they
+receive the points.
 
 ##Files Included:
  - api.py: Contains endpoints and game playing logic.

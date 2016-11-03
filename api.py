@@ -13,9 +13,9 @@ from google.appengine.api import taskqueue
 from utils import get_by_urlsafe
 from settings import WEB_CLIENT_ID
 from gameLogic import *
-from models import User, StringMessage, Game, Score, GameForm, GameForms,
-NewGameForm, MakeMoveForm, ScoreForm, ScoreForms, NewUserForm, UserForm,
-UserForms
+from models import User, StringMessage, Game, Score, GameForm, GameForms, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms, NewUserForm, UserForm, UserForms
+
+DIFF = ['SUPER_EASY', 'EASY', 'MEDIUM', 'HARD', 'STUPID']
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(
@@ -77,6 +77,9 @@ class HangmanAPI(remote.Service):
         if challenger == challenged:
             raise endpoints.ForbiddenException('Challenger and Challenged\
                                                cannot be the same user.')
+        if request.difficulty.upper() not in DIFF:
+            raise endpoints.ForbiddenException('Difficulty must be one of the following:\
+            SUPER_EASY, EASY, MEDIUM, HARD, STUPID')
         game = Game.new_game(challenger.key, request.objective,
                              request.difficulty, challenged.key, request.hint)
         taskqueue.add(params={'email': challenged.email,
@@ -147,8 +150,8 @@ class HangmanAPI(remote.Service):
         if request.guess in game.guesses:
             return game.to_form('Guess already made')
 
-        if len(request.guess) > 1:
-            return game.to_form('Guess can be only 1 character')
+        if len(request.guess) > 1 or request.guess == '':
+            return game.to_form('Guess must be only 1 character')
 
         game.cur_view, success = get_Cur_View(game.objective,
                                               game.cur_view, request.guess)
@@ -186,7 +189,7 @@ class HangmanAPI(remote.Service):
                       response_message=GameForm,
                       path='game/cancel/{urlsafe_game_key}',
                       name='cancel_game',
-                      http_method='POST')
+                      http_method='PUT')
     def cancel_game(self, request):
         """Cancel a game"""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)

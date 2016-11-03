@@ -87,6 +87,8 @@ class Game(ndb.Model):
             scoreWin = Score(
                 user=self.challenged, date=date.today(), won=won,
                 points=self.points, game=game)
+            winner = self.challenged.get()
+            winner.total_points += self.points
             scoreLost = Score(
                 user=self.challenger, date=date.today(), won=False, points=0,
                 game=game)
@@ -94,11 +96,14 @@ class Game(ndb.Model):
             scoreWin = Score(
                 user=self.challenger, date=date.today(), won=True,
                 points=self.points, game=game)
+            winner = self.challenger.get()
+            winner.total_points += self.points
             scoreLost = Score(
                 user=self.challenged, date=date.today(), won=won,
                 points=0, game=game)
         scoreWin.put()
         scoreLost.put()
+        winner.put()
 
 
 class Score(ndb.Model):
