@@ -13,13 +13,27 @@ from google.appengine.api import taskqueue
 from utils import get_by_urlsafe
 from settings import WEB_CLIENT_ID
 from gameLogic import *
-from models import User, StringMessage, Game, Score, GameForm, GameForms, NewGameForm, MakeMoveForm, ScoreForm, ScoreForms, NewUserForm, UserForm, UserForms
+from models import (
+    User,
+    StringMessage,
+    Game,
+    Score,
+    GameForm,
+    GameForms,
+    NewGameForm,
+    MakeMoveForm,
+    ScoreForm,
+    ScoreForms,
+    NewUserForm,
+    UserForm,
+    UserForms )
 
 DIFF = ['SUPER_EASY', 'EASY', 'MEDIUM', 'HARD', 'STUPID']
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(
     urlsafe_game_key=messages.StringField(1))
+CANCEL_GAME_REQUEST = endpoints.ResourceContainer(urlsafe_game_key=messages.StringField(1))
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
     MakeMoveForm, urlsafe_game_key=messages.StringField(1))
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1))
@@ -41,7 +55,7 @@ class HangmanAPI(remote.Service):
                       response_message=UserForm,
                       path='user',
                       name='create_user',
-                      http_method='put')
+                      http_method='PUT')
     def create_user(self, request):
         """Create a User. Requires a unique username"""
         if User.query(User.name == request.name).get():
@@ -78,8 +92,11 @@ class HangmanAPI(remote.Service):
             raise endpoints.ForbiddenException('Challenger and Challenged\
                                                cannot be the same user.')
         if request.difficulty.upper() not in DIFF:
-            raise endpoints.ForbiddenException('Difficulty must be one of the following:\
-            SUPER_EASY, EASY, MEDIUM, HARD, STUPID')
+            raise endpoints.ForbiddenException(
+                'Difficulty must be one of the following: SUPER_EASY, EASY,\
+                MEDIUM, HARD, STUPID')
+        if len(request.objective) < 1:
+            raise endpoints.ForbiddenException('Objective must be at least 1 character')
         game = Game.new_game(challenger.key, request.objective,
                              request.difficulty, challenged.key, request.hint)
         taskqueue.add(params={'email': challenged.email,
@@ -145,18 +162,19 @@ class HangmanAPI(remote.Service):
         challenged = game.challenged.get()
         challenger = game.challenger.get()
         if game.game_over:
-            return game.to_form('Game already over!')
+            raise endpoints.ForbiddenException('Game already over!')
 
         if request.guess in game.guesses:
             return game.to_form('Guess already made')
 
-        if len(request.guess) > 1 or request.guess == '':
-            return game.to_form('Guess must be only 1 character')
+        if len(request.guess) > 1 or not request.guess.isalpha():
+            raise endpoints.ForbiddenException('Guess must be only 1 character')
 
         game.cur_view, success = get_Cur_View(game.objective,
                                               game.cur_view, request.guess)
-        game.guesses.append('Guess: {0}, Result {1}, Current View: {2}'.format(
+        game.guessLog.append('Guess: {0}, Result {1}, Current View: {2}'.format(
             request.guess, success, game.cur_view))
+        game.guesses.append(request.guess)
         if success:
             if game.cur_view == game.objective:
                 game.end_game(True)
@@ -185,7 +203,7 @@ class HangmanAPI(remote.Service):
                 game.put()
                 return game.to_form('Terrible guess')
 
-    @endpoints.method(request_message=GET_GAME_REQUEST,
+    @endpoints.method(request_message=CANCEL_GAME_REQUEST,
                       response_message=GameForm,
                       path='game/cancel/{urlsafe_game_key}',
                       name='cancel_game',
@@ -194,8 +212,8 @@ class HangmanAPI(remote.Service):
         """Cancel a game"""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if game:
-            if game.game_over:
-                return game.to_form('Game cannot be cancelled, game over')
+            if game.game_over or game.cancel:
+                raise endpoints.ForbiddenException('Game cannot be cancelled, game over')
             else:
                 game.cancel = True
                 game.put()

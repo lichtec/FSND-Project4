@@ -7,10 +7,10 @@ guessCal = {'SUPER_EASY': [2.0, 1], 'EASY': [1.0, 2],
 
 def get_point_guesses(difficulty, objective):
     unique = len(set(objective))
-    guesses = round(unique * guessCal[difficulty][0])
+    guesses = round(unique * guessCal[difficulty.upper()][0])
     if guesses == 0:
         guesses = 1
-    points = unique * guessCal[difficulty][1]
+    points = unique * guessCal[difficulty.upper()][1]
     return guesses, points
 
 

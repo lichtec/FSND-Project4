@@ -40,6 +40,7 @@ class Game(ndb.Model):
     challenger = ndb.KeyProperty(required=True, kind='User')
     challenged = ndb.KeyProperty(required=True, kind='User')
     guesses = ndb.StringProperty(required=False, repeated=True)
+    guessLog = ndb.StringProperty(required=False, repeated=True)
 
     @classmethod
     def new_game(cls, challenger, objective, difficulty, challenged, hint):
@@ -56,7 +57,8 @@ class Game(ndb.Model):
             points=values[1],
             game_over=False,
             cancel=False,
-            guesses=[])
+            guesses=[],
+            guessLog=[])
         game.put()
         return game
 
@@ -72,7 +74,8 @@ class Game(ndb.Model):
         form.attempts_remaining = self.attempts_remaining
         form.game_over = self.game_over
         form.cancel = self.cancel
-        form.guesses = self.guesses
+        form.guesses = self.guessLog
+        form.points = self.points
         form.message = message
         return form
 
@@ -150,8 +153,9 @@ class GameForm(messages.Message):
     attempts_remaining = messages.IntegerField(7, required=True)
     game_over = messages.BooleanField(8, required=True)
     cancel = messages.BooleanField(9, required=True)
-    guesses = messages.StringField(10, required=False, repeated=True)
-    message = messages.StringField(11, required=True)
+    points = messages.IntegerField(10, required=True)
+    guesses = messages.StringField(11, required=False, repeated=True)
+    message = messages.StringField(12, required=True)
 
 
 class NewGameForm(messages.Message):
